@@ -1,0 +1,146 @@
+import { View, Text, StyleSheet } from 'react-native'
+import React, { forwardRef, useCallback, useEffect, useRef, useState } from 'react'
+import { BottomSheetBackdrop, BottomSheetBackdropProps, BottomSheetModal, BottomSheetView } from '@gorhom/bottom-sheet'
+import Typography from '../../../../components/ui/Typography';
+import useCheckBox from '../../../../components/ui/CheckboxComp';
+import { CITIES } from '../../../../constant/common';
+import CheckBoxComp from '../../../../components/ui/CheckboxComp';
+import Slider from '@react-native-community/slider';
+import { Colors } from '../../../../constant/colors';
+import { formatNumberIntoCurrency } from '../../../../util/common';
+import RegularButton from '../../../../components/ui/RegularButton';
+
+interface Props {
+  checkedCities: {
+    city: string;
+    checked: boolean;
+  }[],
+  range: {
+    min: number;
+    max: number;
+  },
+  setCheckedCities: (b: {
+    city: string;
+    checked: boolean;
+  }[]) => void,
+  setRange: (data: {
+    min: number;
+    max: number;
+  }) => void,
+  trigger: () => void
+}
+
+const FilterPanel = forwardRef<BottomSheetModal, Props>(
+  ({ checkedCities, range, setCheckedCities, setRange, trigger }, ref) => {
+
+    const renderBackdrop = useCallback(
+      (backdropProps: BottomSheetBackdropProps) => (
+        <BottomSheetBackdrop
+          {...backdropProps}
+          disappearsOnIndex={-1}
+          appearsOnIndex={0}
+          opacity={0.5}
+        />
+      ),
+      []
+    );
+
+    const handleSheetChanges = useCallback((index: number) => {
+      console.log('handleSheetChanges', index);
+    }, []);
+
+    // [
+    //   {
+    //   city:"colombo",
+    //   checked:true
+    // },
+    // {
+    //   city:"Galle",
+    //   checked:false
+    // }
+    // ]
+
+    //     [
+    //   "Colombo",
+    //   "Ethul Kotte",
+    //   "Gampaha",
+    //   "Kadawatha",
+    //   "Kiribathgoda",
+    //   "Galle"
+    // ]
+
+    return (
+      <BottomSheetModal
+        ref={ref}
+        backdropComponent={renderBackdrop}
+        enableContentPanningGesture={false}
+        onChange={handleSheetChanges}
+      >
+        <BottomSheetView style={styles.contentContainer}>
+          <Typography variant='h1'>Filters</Typography>
+
+          <View style={{ marginTop: 24, gap: 10 }}>
+            <Typography variant='h2'>Cities</Typography>
+            {
+              CITIES.map(city =>
+                <CheckBoxComp key={city} isSelected={checkedCities.find(obj => obj.city == city)?.checked} title={city} checkedCities={checkedCities} setCheckedCities={setCheckedCities} />
+              )
+            }
+          </View>
+          <View style={{ marginTop: 24, gap: 10 }}>
+            <Typography variant='h2'>Price</Typography>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Typography variant='h3'>{formatNumberIntoCurrency(range.min)}</Typography>
+              <Typography variant='h3'>{formatNumberIntoCurrency(range.max)}</Typography>
+            </View>
+            <Slider
+              style={{ width: '100%', height: 40 }}
+              minimumValue={0}
+              maximumValue={10000}
+              minimumTrackTintColor={Colors.PRIMARY_COLOR}
+              thumbTintColor={Colors.PRIMARY_COLOR}
+              maximumTrackTintColor="#000000"
+              value={range.min}
+              onValueChange={(value) => {
+                setRange({
+                  ...range, ...{
+                    min: value
+                  }
+                })
+              }}
+              thumbSize={32}
+            />
+            <Slider
+              style={{ width: '100%', height: 40 }}
+              minimumValue={10000}
+              maximumValue={100000}
+              minimumTrackTintColor={Colors.PRIMARY_COLOR}
+              thumbTintColor={Colors.PRIMARY_COLOR}
+              maximumTrackTintColor="#000000"
+              value={range.max}
+              thumbSize={32}
+              onValueChange={(value) => {
+                setRange({
+                  ...range, ...{
+                    max: value
+                  }
+                })
+              }}
+            />
+          </View>
+          <RegularButton marginTop={20} onPress={trigger} text='Filter' Icon={null} />
+        </BottomSheetView>
+      </BottomSheetModal>
+    )
+  }
+)
+
+export default FilterPanel
+
+const styles = StyleSheet.create({
+  contentContainer: {
+    flex: 1,
+    paddingBottom: 100,
+    padding: 24
+  },
+});

@@ -1,0 +1,10 @@
+export const Colors = {
+  PRIMARY_COLOR: "#E8652A",
+  SECONDARY_COLOR: "#1A1A2E",
+  AVATAR_BACKGROUND: '#C9A87C',
+  TEXT_GRAY: '#8A8A9A',
+  TEXT_PRIMARY: '#1A1A2E',
+  ICON_GRAY: '#8A8A9A',
+  BORDER_GRAY: '#cacaca',
+  WHITE: '#ffffff',
+}

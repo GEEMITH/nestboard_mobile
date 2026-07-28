@@ -1,0 +1,1 @@
+export type PropertyType = "All" | "House" | "Villa" | "Apartment";
