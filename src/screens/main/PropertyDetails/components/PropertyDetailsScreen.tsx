@@ -5,6 +5,13 @@ import AvailableRoomTypes from './AvailableRoomTypes';
 import { MapPin } from 'lucide-react-native';
 import { Colors } from '../../../../constant/colors';
 import { RoomType } from '../../../../types/properties';
+import {
+  TouchableOpacity,
+} from 'react-native';
+
+import {
+  Star,
+} from 'lucide-react-native';
 
 const ACCENT = '#FF6A39';
 const BORDER = '#E5E7EB';
@@ -18,10 +25,15 @@ interface PropertyStats {
 interface PropertyDetailsScreenProps {
   title: string;
   address: string;
-  badges: string[];     // e.g. ['Apartment', 'AC', 'Premium'] — first one is highlighted
+  badges: string[];
   stats: PropertyStats;
   rooms: RoomType[];
-  onViewRooms: (roomId: string, roomTypeName: string) => void;
+  onViewRooms: (
+    roomId: string,
+    roomTypeName: string,
+  ) => void;
+  rating?: number;
+  onViewReviews?: () => void;
 }
 
 const Chip = ({ label, active }: { label: string; active?: boolean }) => (
@@ -48,6 +60,8 @@ const PropertyDetailsScreen = ({
   stats,
   rooms,
   onViewRooms,
+  rating = 0,
+  onViewReviews,
 }: PropertyDetailsScreenProps) => {
   return (
     <View style={styles.card}>
@@ -57,6 +71,35 @@ const PropertyDetailsScreen = ({
         <MapPin size={18} color={Colors.PRIMARY_COLOR} />
         <Typography variant="subtitle">{address}</Typography>
       </View>
+
+      <TouchableOpacity
+  activeOpacity={0.8}
+  onPress={onViewReviews}
+  disabled={!onViewReviews}
+  style={styles.reviewButton}
+>
+  <View style={styles.reviewRating}>
+    <Star
+      size={18}
+      color="#F59E0B"
+      fill="#F59E0B"
+    />
+
+    <Typography
+      variant="subtitle"
+      style={styles.ratingText}
+    >
+      {Number(rating).toFixed(1)}
+    </Typography>
+  </View>
+
+  <Typography
+    variant="caption"
+    style={styles.reviewLink}
+  >
+    View reviews
+  </Typography>
+</TouchableOpacity>
 
       <View style={styles.chipRow}>
         {badges.map((badge, index) => (
@@ -128,6 +171,33 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 2,
   },
+
+  reviewButton: {
+  marginTop: 14,
+  padding: 14,
+  borderWidth: 1,
+  borderColor: '#E5E7EB',
+  borderRadius: 14,
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+},
+
+reviewRating: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 6,
+},
+
+ratingText: {
+  fontWeight: '700',
+},
+
+reviewLink: {
+  color: '#FF6A39',
+  fontWeight: '700',
+},
+
 });
 
 export default PropertyDetailsScreen;

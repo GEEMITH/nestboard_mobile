@@ -1,16 +1,15 @@
-import { PropertyType } from "./common";
-
 export type PropertyListResponse = {
-  data: PropertyItem[],
+  data: PropertyItem[];
+
   meta: {
-    page: number,
-    limit: number,
-    total: number,
-    totalPages: number,
-    hasNextPage: boolean,
-    hasPreviousPage: boolean
-  }
-}
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+};
 
 export type PropertyItem = {
   id: string;
@@ -22,69 +21,91 @@ export type PropertyItem = {
   image: string;
   lat: number;
   lng: number;
+
+  saved?: boolean;
+};
+
+export interface Seat {
+  seatIndex: number;
+  tenant: string;
+  tenantBio: string;
 }
 
 export interface Room {
-  id: string;
-  propertyId: string;
-  name: string;
-  pricePerMonth: string;
-  seatCapacity: number;
-  hasAC: boolean;
-  createdAt: string;
+  roomId: string;
+  roomName: string;
+  booking: Seat[];
 }
 
 export interface Property {
   id: string;
   vendorId: string;
+
   title: string;
   description: string;
+
   address: string;
   city: string;
-  type: "APARTMENT" | "HOUSE" | "VILLA" | "HOTEL" | string;
+
+  type:
+    | 'APARTMENT'
+    | 'HOUSE'
+    | 'VILLA'
+    | 'HOTEL'
+    | string;
+
   rating: string;
+
   amenities: string[];
+
   latitude: number;
   longitude: number;
-  imageUrl: string;
-  minStay: string;
-  isActive: boolean;
-  createdAt: string;
-}
 
-// export type PropertyTypes = Property["type"];
+  imageUrl: string;
+
+  minStay: string;
+
+  isActive: boolean;
+
+  createdAt: string;
+
+  saved?: boolean;
+}
 
 export interface RoomType {
-  id: string,
-  name: string,
-  pricePerMonth: string,
-  freeSeats: number,
-  maxSeatsCount: number,
-  roomsCount: number,
-  seatCapacity: number,
-  hasAC: boolean,
-  rooms: Room[]
-}
+  id: string;
 
-export interface Seat {
-  seatIndex: number,
-  tenant: string,
-  tenantBio: string
-}
+  name: string;
 
-export interface Room {
-  roomId: string,
-  roomName: string,
-  booking: Seat[]
+  pricePerMonth: string;
+
+  freeSeats: number;
+
+  maxSeatsCount: number;
+
+  roomsCount: number;
+
+  seatCapacity: number;
+
+  hasAC: boolean;
+
+  rooms: Room[];
 }
 
 export interface PropertyLocation {
   id: string;
+
   name: string;
+
   address: string;
+
   cost: string;
+
   image: string;
+
   lat: number;
+
   lng: number;
+
   ratings: number;
 }

@@ -1,28 +1,123 @@
-import { useEffect, useState } from "react"
-import { PropertyAPI } from "../api/properties"
-import { useSelector } from "react-redux"
-import { RootState } from "../store/store"
-import { RoomType } from "../types/properties"
+import {
+  useEffect,
+  useState,
+} from 'react';
 
-export const useRoomTypeDetails = (roomTypeId: string) => {
+import {
+  PropertyAPI,
+} from '../api/properties';
 
-  const currentProperty = useSelector((state: RootState) =>
-    state.property.currentProperty
-  )
+import {
+  useSelector,
+} from 'react-redux';
 
-  const [roomType, setRoomType] = useState<RoomType>()
+import type {
+  RootState,
+} from '../store/store';
+
+import type {
+  RoomType,
+} from '../types/properties';
+
+export const useRoomTypeDetails = (
+  roomTypeId: string,
+) => {
+  const currentProperty =
+    useSelector(
+      (
+        state: RootState,
+      ) =>
+        state.property
+          .currentProperty,
+    );
+
+  const [
+    roomType,
+    setRoomType,
+  ] = useState<
+    RoomType | undefined
+  >(undefined);
+
+  const [
+    loading,
+    setLoading,
+  ] = useState(true);
+
+  const [
+    error,
+    setError,
+  ] = useState<
+    string | null
+  >(null);
 
   useEffect(() => {
-    if (currentProperty) {
-      PropertyAPI.getSingleRoomType(currentProperty.id, roomTypeId).
-        then(details => {
-          setRoomType(details)
-        })
-    }
-  }, [])
+    let cancelled = false;
+
+    const load = async () => {
+      if (
+        !currentProperty?.id ||
+        !roomTypeId
+      ) {
+        setRoomType(
+          undefined,
+        );
+
+        setLoading(false);
+
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        setError(null);
+
+        const result =
+          await PropertyAPI.getSingleRoomType(
+            currentProperty.id,
+            roomTypeId,
+          );
+
+        if (!cancelled) {
+          setRoomType(
+            result,
+          );
+        }
+      } catch (err) {
+        console.error(
+          'Failed to load room type:',
+          err,
+        );
+
+        if (!cancelled) {
+          setRoomType(
+            undefined,
+          );
+
+          setError(
+            'Unable to load room details.',
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    currentProperty?.id,
+    roomTypeId,
+  ]);
 
   return {
-    roomType
-  }
-
-}
+    roomType,
+    loading,
+    error,
+  };
+};

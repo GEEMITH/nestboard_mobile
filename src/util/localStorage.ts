@@ -1,19 +1,24 @@
-import { createAsyncStorage } from "@react-native-async-storage/async-storage";
+import { createAsyncStorage } from '@react-native-async-storage/async-storage';
 
-// create a storage instance
-const storage = createAsyncStorage("nestBoard");
+const storage = createAsyncStorage('nestBoard');
 
-export const persistLogin = (refreshToken: string) => {
-  storage.setItem("refreshToken", refreshToken)
-}
+export const persistLogin = async (
+  refreshToken: string,
+) => {
+  await storage.setItem(
+    'refreshToken',
+    refreshToken,
+  );
+};
 
 export const checkStatus = async () => {
-  const v = await storage.getItem("refreshToken");
-  return v;
-}
+  return await storage.getItem(
+    'refreshToken',
+  );
+};
 
 export const removeRefreshToken = async () => {
-  storage.removeItem("refreshToken")
-}
-
-
+  await storage.removeItem(
+    'refreshToken',
+  );
+};

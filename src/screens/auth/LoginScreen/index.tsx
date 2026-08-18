@@ -52,8 +52,10 @@ export default function LoginScreen() {
       }))
 
       //Save the refresh token inside the device storage
-      persistLogin(data.refreshToken)
-      nav.navigate("Home")
+      await persistLogin(
+  data.refreshToken,
+);
+      
 
     } catch (err: any) {
       if (err.response?.status === 401) {

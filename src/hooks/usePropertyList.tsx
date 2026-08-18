@@ -1,63 +1,229 @@
-import { useEffect, useState } from "react";
-import { PropertyItem } from "../types/properties";
-import { PropertyAPI } from "../api/properties";
-import { PropertyType } from "../types/common";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 
-export const usePropertyList = (currentPType: PropertyType, range: {
-  min: number;
-  max: number;
-},
+import {
+  PropertyAPI,
+  PropertyFilters,
+} from '../api/properties';
+
+import { PropertyItem } from '../types/properties';
+
+type Props = {
+  currentPType: PropertyFilters['type'];
+  range: {
+    min: number;
+    max: number;
+  };
   checkedCities: {
     city: string;
     checked: boolean;
-  }[],
-  triggerFilter: number
-) => {
+  }[];
+  search: string;
+  triggerFilter: number;
+};
 
-  console.log("cu", currentPType)
+export const usePropertyList = ({
+  currentPType,
+  range,
+  checkedCities,
+  search,
+  triggerFilter,
+}: Props) => {
+  const LIMIT = 6;
+
+  const [properties, setProperties] =
+    useState<PropertyItem[]>([]);
 
   const [page, setPage] = useState(1);
-  const [hasNext, setHasNext] = useState(false);
-  const [fetching, setFetching] = useState(false);
-  const limit = 4; // Fetch 4 items per batch
-  const [properties, setProperties] = useState<PropertyItem[]>([])
+
+  const [hasNext, setHasNext] =
+    useState(false);
+
+  const [fetching, setFetching] =
+    useState(false);
+
+  const [initialLoading, setInitialLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState<string | null>(null);
+
+  const requestId =
+    useRef(0);
+
+  const buildFilters = useCallback(
+    (requestedPage: number): PropertyFilters => ({
+      page: requestedPage,
+      limit: LIMIT,
+
+      type: currentPType,
+
+      search: search.trim(),
+
+      minPrice:
+        range.min > 0
+          ? range.min
+          : undefined,
+
+      maxPrice:
+        range.max > 0
+          ? range.max
+          : undefined,
+
+      cities: checkedCities
+        .filter(city => city.checked)
+        .map(city => city.city),
+
+      sort: 'recency',
+    }),
+    [
+      currentPType,
+      range.min,
+      range.max,
+      checkedCities,
+      search,
+    ],
+  );
+
+  const fetchFirstPage = useCallback(
+    async () => {
+      const currentRequest =
+        ++requestId.current;
+
+      setInitialLoading(true);
+      setFetching(false);
+      setError(null);
+      setProperties([]);
+      setPage(1);
+      setHasNext(false);
+
+      try {
+        const response =
+          await PropertyAPI.getAllProperties(
+            buildFilters(1),
+          );
+
+        if (
+          currentRequest !== requestId.current
+        ) {
+          return;
+        }
+
+        setProperties(response.data);
+        setHasNext(
+          response.meta.hasNextPage,
+        );
+        setPage(
+          response.meta.hasNextPage
+            ? 2
+            : 1,
+        );
+      } catch {
+        if (
+          currentRequest !== requestId.current
+        ) {
+          return;
+        }
+
+        setProperties([]);
+        setHasNext(false);
+        setError(
+          'Unable to load properties. Please try again.',
+        );
+      } finally {
+        if (
+          currentRequest === requestId.current
+        ) {
+          setInitialLoading(false);
+        }
+      }
+    },
+    [buildFilters],
+  );
+
+  const fetchNextBatch =
+    useCallback(async () => {
+      if (
+        fetching ||
+        !hasNext ||
+        initialLoading
+      ) {
+        return;
+      }
+
+      setFetching(true);
+      setError(null);
+
+      try {
+        const response =
+          await PropertyAPI.getAllProperties(
+            buildFilters(page),
+          );
+
+        setProperties(current => {
+          const existingIds =
+            new Set(
+              current.map(
+                property => property.id,
+              ),
+            );
+
+          const newItems =
+            response.data.filter(
+              property =>
+                !existingIds.has(
+                  property.id,
+                ),
+            );
+
+          return [
+            ...current,
+            ...newItems,
+          ];
+        });
+
+        setHasNext(
+          response.meta.hasNextPage,
+        );
+
+        setPage(
+          response.meta.hasNextPage
+            ? response.meta.page + 1
+            : response.meta.page,
+        );
+      } catch {
+        setError(
+          'Unable to load more properties.',
+        );
+      } finally {
+        setFetching(false);
+      }
+    }, [
+      buildFilters,
+      fetching,
+      hasNext,
+      initialLoading,
+      page,
+    ]);
 
   useEffect(() => {
-    fetchFirstBatch();
-  }, [currentPType, triggerFilter])
-
-  const fetchFirstBatch = () => {
-    setProperties([]);
-    setPage(1)
-    PropertyAPI.getAllProperties(page, limit, currentPType, range, checkedCities).then((d) => {
-      setProperties(d.data)
-      setHasNext(d.meta.hasNextPage)
-      if (d.meta.hasNextPage) {
-        setPage(p => p + 1)
-      }
-    }).catch(() => { })
-  }
-
-  const fetchNextBatch = () => {
-    if (hasNext && !fetching) {
-      setFetching(true);
-      setTimeout(() => {
-        PropertyAPI.getAllProperties(page, limit, currentPType, range, checkedCities).then((d) => {
-          setProperties(oldlist => [...oldlist, ...d.data])
-          setHasNext(d.meta.hasNextPage)
-          setFetching(false);
-          if (d.meta.hasNextPage) {
-            setPage(p => p + 1)
-          }
-        }).catch(() => { })
-      }, 0)
-    }
-  }
+    fetchFirstPage();
+  }, [
+    currentPType,
+    triggerFilter,
+    fetchFirstPage,
+  ]);
 
   return {
     properties,
     fetchNextBatch,
-    fetching
-  }
-
-}
+    fetching,
+    initialLoading,
+    error,
+    retry: fetchFirstPage,
+  };
+};
