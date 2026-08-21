@@ -1,4 +1,4 @@
-import axios from 'axios';
+import { apiClient } from './apiClient';
 
 import {
   AuthResponse,
@@ -7,28 +7,13 @@ import {
   AuthTokens,
 } from '../types/auth';
 
-import { apiClient } from './apiClient';
-
-const API_ROOT = 'https://nestboard-backend-hra2.vercel.app/api';
-
 export const AuthAPI = {
   login: async (
     payload: LoginPayload,
   ): Promise<AuthResponse> => {
-    const url = `${API_ROOT}/auth/login`;
-
-    console.log('LOGIN URL:', url);
-
-    const response = await axios.post<AuthResponse>(
-      url,
+    const response = await apiClient.post<AuthResponse>(
+      'auth/login',
       payload,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        timeout: 30000,
-      },
     );
 
     return response.data;
