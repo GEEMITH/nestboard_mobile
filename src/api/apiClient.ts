@@ -8,10 +8,11 @@ import {
   removeRefreshToken,
 } from '../util/localStorage';
 
-import { ENV } from '../config/env';
+const API_BASE_URL =
+  'https://nestboard-backend-hra2.vercel.app/api/';
 
 export const apiClient = axios.create({
-  baseURL: ENV.API_BASE_URL,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
     Accept: 'application/json',
@@ -59,7 +60,7 @@ apiClient.interceptors.response.use(
 
     try {
       const response = await axios.post(
-        `${ENV.API_BASE_URL}auth/refresh`,
+        `${API_BASE_URL}auth/refresh`,
         {
           refreshToken,
         },
@@ -86,10 +87,12 @@ apiClient.interceptors.response.use(
 
       await persistLogin(newRefreshToken);
 
-      originalRequest.headers = {
-        ...originalRequest.headers,
-        Authorization: `Bearer ${accessToken}`,
-      };
+      if (!originalRequest.headers) {
+        originalRequest.headers = {};
+      }
+
+      originalRequest.headers.Authorization =
+        `Bearer ${accessToken}`;
 
       return apiClient(originalRequest);
     } catch (refreshError) {
